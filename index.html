@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wallet Connect Landing</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <section class="hero">
+      <h1>Connect your wallet to start</h1>
+      <p>Securely sign in, manage your funds, and interact with blockchain apps.</p>
+      <div class="wallet-list" id="walletList"></div>
+      <div class="status" id="connectionStatus">Not connected</div>
+
+      <button id="disconnectButton" class="btn btn-secondary" hidden>Disconnect</button>
+
+      <div class="help-text">
+        <p>Need help? Use one of the wallet providers above or install MetaMask and refresh.</p>
+      </div>
+    </section>
+
+    <section class="features">
+      <h2>What you can do</h2>
+      <ul>
+        <li>View your balance and recent transactions</li>
+        <li>Sign messages and secure login</li>
+        <li>Spend tokens in DeFi and NFTs</li>
+      </ul>
+    </section>
+
+    <section class="data-tools">
+      <h2>Data integrations</h2>
+
+      <div class="tool-grid">
+        <div class="tool-card">
+          <h3>Subgraph query (Graph)</h3>
+          <p>Query transaction/asset data using a GraphQL API (e.g. Uniswap subgraph).</p>
+          <input id="subgraphAddress" placeholder="Wallet address" />
+          <button id="subgraphFetch" class="btn">Fetch holdings</button>
+          <pre id="subgraphResult" class="terminal"></pre>
+        </div>
+
+        <div class="tool-card">
+          <h3>Chainlink data feeds</h3>
+          <p>Get on-chain price keepers from Chainlink providers via public endpoints.</p>
+          <button id="chainlinkFetch" class="btn">Fetch ETH / USDC</button>
+          <pre id="chainlinkResult" class="terminal"></pre>
+        </div>
+
+        <div class="tool-card">
+          <h3>1inch Fusion quote</h3>
+          <p>Get a token swap quote from 1inch Fusion API.</p>
+          <button id="oneinchQuote" class="btn">Quote 1 ETH → DAI</button>
+          <pre id="oneinchResult" class="terminal"></pre>
+        </div>
+
+        <div class="tool-card">
+          <h3>Claude portfolio analysis</h3>
+          <p>Send smart-portfolio summary to Claude (stubbed for local demo).</p>
+          <button id="claudeAnalyze" class="btn">Run analysis</button>
+          <pre id="claudeResult" class="terminal"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  <script src="https://unpkg.com/coinbase-wallet-sdk@3.8.0/dist/CoinbaseWalletSDK.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
