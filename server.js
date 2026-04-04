@@ -8,6 +8,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
+app.get('/config.js', (req, res) => {
+  res.type('application/javascript');
+  res.send(`window.CANNES_CONFIG = {
+    infuraKey: ${JSON.stringify(process.env.CHAINLINK_INFURA_KEY || '')},
+    portfolioApiKeyRequired: ${Boolean(process.env.PORTFOLIO_API_KEY)}
+  };`);
+});
+
 const portfolioStore = {};
 
 app.post('/api/portfolio', async (req, res) => {

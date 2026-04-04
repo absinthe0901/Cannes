@@ -1,14 +1,37 @@
 {
   "name": "cannes-wallet",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "type": "module",
+  "description": "A dark-themed wallet connect frontend and Node.js server for portfolio and data integration demos.",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/absinthe0901/Cannes.git"
+  },
+  "bugs": {
+    "url": "https://github.com/absinthe0901/Cannes/issues"
+  },
+  "homepage": "https://github.com/absinthe0901/Cannes#readme",
+  "keywords": [
+    "wallet",
+    "blockchain",
+    "crypto",
+    "dark-theme",
+    "web3",
+    "portfolio"
+  ],
+  "author": "absinthe0901",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
   }
 }

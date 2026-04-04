@@ -4,25 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wallet Connect Landing</title>
+  <meta name="description" content="Dark-themed wallet connect frontend with crypto portfolio and data integration demos." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <main class="container">
-    <section class="hero">
-      <h1>Connect your wallet to start</h1>
-      <p>Securely sign in, manage your funds, and interact with blockchain apps.</p>
-      <div class="wallet-list" id="walletList"></div>
-      <div class="status" id="connectionStatus">Not connected</div>
+    <section class="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title">Connect your wallet to start</h1>
+      <p>Securely sign in, manage your funds, and interact with blockchain apps in a safe, readable experience.</p>
+      <div class="wallet-list" id="walletList" aria-label="Wallet provider options"></div>
+      <div class="status" id="connectionStatus" role="status" aria-live="polite">Not connected</div>
+      <div class="wallet-info" id="walletInfo" aria-live="polite">
+        <div><strong>Wallet:</strong> <span id="connectedWalletType">Disconnected</span></div>
+        <div><strong>Network:</strong> <span id="connectedNetwork">—</span></div>
+        <div><strong>Balance:</strong> <span id="connectedBalance">—</span></div>
+      </div>
 
-      <button id="disconnectButton" class="btn btn-secondary" hidden>Disconnect</button>
+      <button id="disconnectButton" class="btn btn-secondary" hidden type="button">Disconnect</button>
 
       <div class="help-text">
         <p>Need help? Use one of the wallet providers above or install MetaMask and refresh.</p>
       </div>
     </section>
 
-    <section class="features">
-      <h2>What you can do</h2>
+    <section class="features" aria-labelledby="features-title">
+      <h2 id="features-title">What you can do</h2>
       <ul>
         <li>View your balance and recent transactions</li>
         <li>Sign messages and secure login</li>
@@ -30,16 +36,17 @@
       </ul>
     </section>
 
-    <section class="data-tools">
-      <h2>Data integrations</h2>
+    <section class="data-tools" aria-labelledby="data-tools-title">
+      <h2 id="data-tools-title">Data integrations</h2>
 
       <div class="tool-grid">
         <div class="tool-card">
           <h3>Subgraph query (Graph)</h3>
           <p>Query transaction/asset data using a GraphQL API (e.g. Uniswap subgraph).</p>
-          <input id="subgraphAddress" placeholder="Wallet address" />
-          <button id="subgraphFetch" class="btn">Fetch holdings</button>
-          <pre id="subgraphResult" class="terminal"></pre>
+          <label class="field-label" for="subgraphAddress">Wallet address</label>
+          <input id="subgraphAddress" placeholder="Enter wallet address" aria-label="Wallet address" />
+          <button id="subgraphFetch" class="btn" type="button">Fetch holdings</button>
+          <pre id="subgraphResult" class="terminal" aria-live="polite"></pre>
         </div>
 
         <div class="tool-card">
@@ -57,6 +64,21 @@
         </div>
 
         <div class="tool-card">
+          <h3>Portfolio snapshot</h3>
+          <p>Save or load a wallet snapshot locally, or save it remotely via the backend API.</p>
+          <input id="portfolioApiKey" placeholder="Portfolio API key (optional)" aria-label="Portfolio API key" />
+          <div class="tool-actions">
+            <button id="savePortfolioLocal" class="btn" type="button">Save locally</button>
+            <button id="loadPortfolioLocal" class="btn btn-secondary" type="button">Load local</button>
+          </div>
+          <div class="tool-actions">
+            <button id="savePortfolioRemote" class="btn" type="button">Save remote</button>
+            <button id="loadPortfolioRemote" class="btn btn-secondary" type="button">Load remote</button>
+          </div>
+          <pre id="portfolioResult" class="terminal" aria-live="polite"></pre>
+        </div>
+
+        <div class="tool-card">
           <h3>Claude portfolio analysis</h3>
           <p>Send smart-portfolio summary to Claude (stubbed for local demo).</p>
           <button id="claudeAnalyze" class="btn">Run analysis</button>
@@ -70,6 +92,7 @@
   <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
   <script src="https://unpkg.com/coinbase-wallet-sdk@3.8.0/dist/CoinbaseWalletSDK.min.js"></script>
+  <script src="/config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

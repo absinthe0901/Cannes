@@ -7,14 +7,26 @@ const wallets = [
 const walletList = document.getElementById('walletList');
 const statusEl = document.getElementById('connectionStatus');
 const disconnectButton = document.getElementById('disconnectButton');
+const walletInfo = document.getElementById('walletInfo');
+const walletTypeEl = document.getElementById('connectedWalletType');
+const walletNetworkEl = document.getElementById('connectedNetwork');
+const walletBalanceEl = document.getElementById('connectedBalance');
+const portfolioApiKeyInput = document.getElementById('portfolioApiKey');
+const portfolioSaveLocalBtn = document.getElementById('savePortfolioLocal');
+const portfolioLoadLocalBtn = document.getElementById('loadPortfolioLocal');
+const portfolioSaveRemoteBtn = document.getElementById('savePortfolioRemote');
+const portfolioLoadRemoteBtn = document.getElementById('loadPortfolioRemote');
+const portfolioResult = document.getElementById('portfolioResult');
 let web3Modal = null;
 let web3Provider = null;
 let provider = null;
 let signer = null;
 let connectedAddress = null;
 let connectedWalletId = null;
+let currentBalance = null;
+let currentNetwork = null;
 
-const infuraKey = window.CHAINLINK_INFURA_KEY || 'YOUR_INFURA_PROJECT_ID';
+const infuraKey = window.CANNES_CONFIG?.infuraKey || '';
 
 function setStatus(message, isError = false) {
   statusEl.textContent = message;
@@ -39,6 +51,48 @@ function updateUI() {
   } else {
     setStatus('Not connected');
     disconnectButton.hidden = true;
+  }
+
+  updateWalletInfo();
+}
+
+function updateWalletInfo() {
+  if (!walletInfo) return;
+
+  if (!connectedAddress) {
+    walletTypeEl.textContent = 'Disconnected';
+    walletNetworkEl.textContent = '—';
+    walletBalanceEl.textContent = '—';
+    return;
+  }
+
+  const walletName = wallets.find(w => w.id === connectedWalletId)?.name || 'Wallet';
+  walletTypeEl.textContent = walletName;
+  walletNetworkEl.textContent = currentNetwork
+    ? (currentNetwork.name === 'homestead' ? 'Ethereum Mainnet' : `${currentNetwork.name} (chain ${currentNetwork.chainId})`)
+    : 'Unknown';
+  walletBalanceEl.textContent = currentBalance != null ? `${currentBalance.toFixed(4)} ETH` : 'Loading...';
+}
+
+async function updateBalance() {
+  if (!provider || !connectedAddress) {
+    currentBalance = null;
+    currentNetwork = null;
+    updateWalletInfo();
+    return;
+  }
+
+  try {
+    const balanceWei = await provider.getBalance(connectedAddress);
+    currentBalance = Number(ethers.formatEther(balanceWei));
+    currentNetwork = await provider.getNetwork();
+    updateWalletInfo();
+    setStatus(`Connected ${formatAddress(connectedAddress)} • ${currentBalance.toFixed(4)} ETH`);
+  } catch (err) {
+    currentBalance = null;
+    currentNetwork = null;
+    updateWalletInfo();
+    setStatus(`Connected ${formatAddress(connectedAddress)}`);
   }
 }
 
@@ -232,7 +286,10 @@ async function fetchChainlinkFeeds() {
 
   try {
     if (!provider) {
-      provider = new ethers.JsonRpcProvider('https://mainnet.infura.io/v3/' + (window.CHAINLINK_INFURA_KEY || '')); // fallback
+      const rpcUrl = infuraKey
+        ? `https://mainnet.infura.io/v3/${infuraKey}`
+        : 'https://cloudflare-eth.com';
+      provider = new ethers.JsonRpcProvider(rpcUrl);
     }
 
     const aggregatorAbi = [
@@ -303,18 +360,117 @@ async function analyzeWithClaude() {
   }
 }
 
+function getPortfolioSnapshot() {
+  return {
+    address: connectedAddress,
+    balance: currentBalance,
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function setPortfolioResult(content, isError = false) {
+  if (!portfolioResult) return;
+  portfolioResult.textContent = content;
+  portfolioResult.style.color = isError ? '#ff8f9e' : '#cbd8ff';
+}
+
+function savePortfolioLocal() {
+  if (!connectedAddress) {
+    setPortfolioResult('Connect a wallet first to save a snapshot.', true);
+    return;
+  }
+
+  const snapshot = getPortfolioSnapshot();
+  localStorage.setItem('cannesPortfolioSnapshot', JSON.stringify(snapshot));
+  setPortfolioResult('Saved locally:\n' + JSON.stringify(snapshot, null, 2));
+}
+
+function loadPortfolioLocal() {
+  const raw = localStorage.getItem('cannesPortfolioSnapshot');
+  if (!raw) {
+    setPortfolioResult('No saved portfolio snapshot found.', true);
+    return;
+  }
+
+  const data = JSON.parse(raw);
+  setPortfolioResult(JSON.stringify(data, null, 2));
+}
+
+async function savePortfolioRemote() {
+  if (!connectedAddress) {
+    setPortfolioResult('Connect a wallet first to save remotely.', true);
+    return;
+  }
+
+  const apiKey = portfolioApiKeyInput?.value.trim();
+  if (!apiKey) {
+    setPortfolioResult('Enter a portfolio API key to save remotely.', true);
+    return;
+  }
+
+  const snapshot = getPortfolioSnapshot();
+  try {
+    const response = await fetch('/api/portfolio', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey
+      },
+      body: JSON.stringify(snapshot)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+    setPortfolioResult('Saved remotely:\n' + JSON.stringify(result, null, 2));
+  } catch (err) {
+    setPortfolioResult('Remote save failed: ' + err.message, true);
+  }
+}
+
+async function loadPortfolioRemote() {
+  if (!connectedAddress) {
+    setPortfolioResult('Connect a wallet first to load remote snapshot.', true);
+    return;
+  }
+
+  const apiKey = portfolioApiKeyInput?.value.trim();
+  if (!apiKey) {
+    setPortfolioResult('Enter a portfolio API key to load remotely.', true);
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/portfolio/${connectedAddress}`, {
+      headers: {
+        'x-api-key': apiKey
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+    setPortfolioResult('Remote snapshot:\n' + JSON.stringify(result, null, 2));
+  } catch (err) {
+    setPortfolioResult('Remote load failed: ' + err.message, true);
+  }
+}
+
 subgraphFetch.addEventListener('click', updateSubgraph);
 chainlinkFetch.addEventListener('click', fetchChainlinkFeeds);
 oneinchQuoteBtn.addEventListener('click', fetch1InchQuote);
 claudeAnalyzeBtn.addEventListener('click', analyzeWithClaude);
+portfolioSaveLocalBtn?.addEventListener('click', savePortfolioLocal);
+portfolioLoadLocalBtn?.addEventListener('click', loadPortfolioLocal);
+portfolioSaveRemoteBtn?.addEventListener('click', savePortfolioRemote);
+portfolioLoadRemoteBtn?.addEventListener('click', loadPortfolioRemote);
 
 // init
 initWeb3Modal();
-
-window.addEventListener('load', async () => {
-  const cachedAddress = localStorage.getItem('cannesAddress');
-  if (cachedAddress && !connectedAddress) {
-    await initWeb3Modal();
-  }
-});
 
